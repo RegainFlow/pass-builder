@@ -3,12 +3,11 @@ import { generateDeploymentPlan } from '../services/geminiService';
 import { DeploymentPlan } from '../types';
 import { Send, Terminal, Cpu, Layers, CheckCircle, Loader2 } from 'lucide-react';
 
-interface ProvisionerProps {
+interface AIChatbotViewProps {
   onDeploy: (plan: DeploymentPlan) => void;
-  onCancel: () => void;
 }
 
-const Provisioner: React.FC<ProvisionerProps> = ({ onDeploy, onCancel }) => {
+const AIChatbotView: React.FC<AIChatbotViewProps> = ({ onDeploy }) => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [plan, setPlan] = useState<DeploymentPlan | null>(null);
@@ -37,10 +36,10 @@ const Provisioner: React.FC<ProvisionerProps> = ({ onDeploy, onCancel }) => {
     <div className="flex flex-col h-full max-w-4xl mx-auto w-full animate-fade-in">
       <div className="mb-8 text-center">
         <h2 className="text-3xl font-bold font-sans text-white mb-2">
-          AI Provisioning Engine
+          AI Infrastructure Assistant
         </h2>
         <p className="text-gray-400 font-logo">
-          Describe your desired environment. RegainFlow will handle the Terraform & Ansible logic.
+          Chat with RegainFlow AI to design and provision complex environments.
         </p>
       </div>
 
@@ -51,7 +50,7 @@ const Provisioner: React.FC<ProvisionerProps> = ({ onDeploy, onCancel }) => {
           
           <div className="relative z-10">
             <label className="block text-primary text-sm font-semibold mb-2 uppercase tracking-wider">
-              Natural Language Request
+              Describe your requirements
             </label>
             <textarea
               className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-white font-mono focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all h-40 resize-none"
@@ -62,13 +61,6 @@ const Provisioner: React.FC<ProvisionerProps> = ({ onDeploy, onCancel }) => {
             />
             
             <div className="mt-6 flex justify-end gap-4">
-              <button
-                onClick={onCancel}
-                className="px-6 py-2 rounded-lg text-gray-400 hover:text-white transition-colors"
-                disabled={isLoading}
-              >
-                Cancel
-              </button>
               <button
                 onClick={handleGenerate}
                 disabled={isLoading || !input.trim()}
@@ -153,4 +145,4 @@ const Provisioner: React.FC<ProvisionerProps> = ({ onDeploy, onCancel }) => {
   );
 };
 
-export default Provisioner;
+export default AIChatbotView;

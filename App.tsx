@@ -1,22 +1,30 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { EnvStatus, Environment, LogEntry, DeploymentPlan } from './types';
-import Provisioner from './components/Provisioner';
-import { 
-  Server, 
-  Activity, 
-  Terminal as TerminalIcon, 
-  Plus, 
-  Settings, 
-  ShieldCheck, 
-  Cpu, 
+import AIChatbotView from './components/AIChatbotView';
+import StaticEnvironmentForm from './components/StaticEnvironmentForm';
+import BlueprintsView from './components/BlueprintsView';
+import AuditLogsView from './components/AuditLogsView';
+import SettingsView from './components/SettingsView';
+import {
+  Server,
+  Terminal as TerminalIcon,
+  Plus,
+  Cpu,
   Globe,
   Clock,
-  ChevronRight
+  ChevronRight,
+  ShieldCheck,
+  Bot,
+  LayoutTemplate,
+  ScrollText,
+  Settings as SettingsIcon
 } from 'lucide-react';
 
-const Header = () => (
+type ViewState = 'DASHBOARD' | 'CREATE_STATIC' | 'AI_CHATBOT' | 'BLUEPRINTS' | 'AUDIT_LOGS' | 'SETTINGS';
+
+const Header = ({ currentView, setView }: { currentView: ViewState, setView: (v: ViewState) => void }) => (
   <header className="fixed top-0 w-full z-50 glass-card !rounded-none !border-x-0 border-b border-white/10 h-16 flex items-center justify-between px-6">
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-3 cursor-pointer" onClick={() => setView('DASHBOARD')}>
       <div className="w-8 h-8 rounded bg-primary flex items-center justify-center neon-glow">
         <Server className="text-black w-5 h-5" />
       </div>
@@ -24,17 +32,40 @@ const Header = () => (
         REGAIN<span className="text-primary">FLOW</span>
       </h1>
     </div>
-    <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-400">
-      <a href="#" className="text-white hover:text-primary transition-colors">Environments</a>
-      <a href="#" className="hover:text-primary transition-colors">Blueprints</a>
-      <a href="#" className="hover:text-primary transition-colors">Audit Logs</a>
-      <a href="#" className="hover:text-primary transition-colors">Settings</a>
+    <nav className="hidden md:flex items-center gap-1 text-sm font-medium text-gray-400">
+      <button
+        onClick={() => setView('DASHBOARD')}
+        className={`px-4 py-2 rounded-lg transition-colors ${currentView === 'DASHBOARD' ? 'text-white bg-white/10' : 'hover:text-primary'}`}
+      >
+        Environments
+      </button>
+      <button
+        onClick={() => setView('BLUEPRINTS')}
+        className={`px-4 py-2 rounded-lg transition-colors ${currentView === 'BLUEPRINTS' ? 'text-white bg-white/10' : 'hover:text-primary'}`}
+      >
+        Blueprints
+      </button>
+      <button
+        onClick={() => setView('AUDIT_LOGS')}
+        className={`px-4 py-2 rounded-lg transition-colors ${currentView === 'AUDIT_LOGS' ? 'text-white bg-white/10' : 'hover:text-primary'}`}
+      >
+        Audit Logs
+      </button>
+      <button
+        onClick={() => setView('SETTINGS')}
+        className={`px-4 py-2 rounded-lg transition-colors ${currentView === 'SETTINGS' ? 'text-white bg-white/10' : 'hover:text-primary'}`}
+      >
+        Settings
+      </button>
     </nav>
     <div className="flex items-center gap-4">
-      <div className="flex items-center gap-2 text-xs text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
-        <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
-        SYSTEM ONLINE
-      </div>
+      <button
+        onClick={() => setView('AI_CHATBOT')}
+        className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all ${currentView === 'AI_CHATBOT' ? 'bg-primary/20 border-primary text-primary shadow-[0_0_15px_rgba(0,214,203,0.3)]' : 'border-white/20 text-gray-400 hover:border-primary/50 hover:text-primary'}`}
+      >
+        <Bot className="w-4 h-4" />
+        <span className="text-xs font-bold">AI ASSISTANT</span>
+      </button>
       <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-primary to-blue-600 border border-white/20"></div>
     </div>
   </header>
@@ -52,7 +83,7 @@ const EnvCard = ({ env }: { env: Environment }) => {
   return (
     <div className="glass-card p-6 rounded-xl hover:border-primary/50 transition-all duration-300 group relative overflow-hidden">
       <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full filter blur-2xl -translate-y-1/2 translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-      
+
       <div className="flex justify-between items-start mb-4 relative z-10">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-white/5 border border-white/10">
@@ -93,7 +124,7 @@ const EnvCard = ({ env }: { env: Environment }) => {
           <span>HighSide PXE: {env.status === EnvStatus.ACTIVE ? 'Complete' : 'Pending'}</span>
         </div>
       </div>
-      
+
       <div className="mt-4 pt-4 border-t border-white/5 flex justify-between items-center">
         <span className="text-xs text-gray-500 flex items-center gap-1">
           <Clock className="w-3 h-3" /> {new Date(env.createdAt).toLocaleDateString()}
@@ -154,7 +185,7 @@ const TerminalView = ({ logs, activeEnv }: { logs: LogEntry[], activeEnv: Enviro
 };
 
 export default function App() {
-  const [view, setView] = useState<'DASHBOARD' | 'CREATE'>('DASHBOARD');
+  const [view, setView] = useState<ViewState>('DASHBOARD');
   const [environments, setEnvironments] = useState<Environment[]>([
     {
       id: 'env-prod-001',
@@ -210,7 +241,7 @@ export default function App() {
         }]);
 
         if (stage.level === 'SUCCESS') {
-          setEnvironments(prev => prev.map(e => 
+          setEnvironments(prev => prev.map(e =>
             e.id === activeDeployId ? { ...e, status: EnvStatus.ACTIVE } : e
           ));
           setActiveDeployId(null);
@@ -251,10 +282,10 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#121213] text-white pt-20 pb-10 font-sans selection:bg-primary/30 selection:text-white">
-      <Header />
-      
+      <Header currentView={view} setView={setView} />
+
       <main className="container mx-auto px-4 md:px-6">
-        
+
         {view === 'DASHBOARD' && (
           <div className="animate-fade-in">
             <div className="flex justify-between items-end mb-8">
@@ -262,8 +293,8 @@ export default function App() {
                 <h2 className="text-3xl font-bold mb-1">Infrastructure Overview</h2>
                 <p className="text-gray-400">Managing {environments.length} active environments across 2 regions.</p>
               </div>
-              <button 
-                onClick={() => setView('CREATE')}
+              <button
+                onClick={() => setView('CREATE_STATIC')}
                 className="group flex items-center gap-2 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/50 px-5 py-2.5 rounded-lg transition-all shadow-[0_0_15px_rgba(0,214,203,0.15)] hover:shadow-[0_0_25px_rgba(0,214,203,0.3)]"
               >
                 <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform" />
@@ -286,12 +317,21 @@ export default function App() {
           </div>
         )}
 
-        {view === 'CREATE' && (
-          <Provisioner 
-            onDeploy={handleDeploy} 
-            onCancel={() => setView('DASHBOARD')} 
+        {view === 'CREATE_STATIC' && (
+          <StaticEnvironmentForm
+            onDeploy={handleDeploy}
+            onCancel={() => setView('DASHBOARD')}
           />
         )}
+
+        {view === 'AI_CHATBOT' && (
+          <AIChatbotView onDeploy={handleDeploy} />
+        )}
+
+        {view === 'BLUEPRINTS' && <BlueprintsView />}
+        {view === 'AUDIT_LOGS' && <AuditLogsView />}
+        {view === 'SETTINGS' && <SettingsView />}
+
       </main>
 
       {/* Decorative background elements */}
