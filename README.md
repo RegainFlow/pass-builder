@@ -7,4 +7,9 @@
 - Infrastructure as Code (IaC)
 - CI/CD Automation
 
-**Primary Metric:** 10× Faster Environment Setup
+
+# Run Locally
+
+**Prerequisites:** Node.js
+- Install dependencies: `npm install`
+- Run the app: `npm run dev`
